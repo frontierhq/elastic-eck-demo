@@ -1,15 +1,16 @@
+import asyncio
 import os
 import yaml
 from helpers.apply_terraform import apply_terraform
 from helpers.download_kubeconfig import download_kubeconfig
-from helpers.exec import exec
 from helpers.get_env_value import get_env_value
 from helpers.get_ingress_external_ip import get_ingress_external_ip
 from helpers.init_terraform import init_terraform
-from tempfile import TemporaryDirectory
+from pathlib import Path
+from pyhelm3 import Client as HelmClient
 
 
-def deploy():
+async def deploy():
     environment = get_env_value("ENVIRONMENT")
     region = get_env_value("REGION")
     zone = get_env_value("ZONE")
@@ -27,96 +28,70 @@ def deploy():
         },
     )
 
-    exec("helm", "repo", "add", "ingress-nginx",
-         "https://kubernetes.github.io/ingress-nginx")
-    exec("helm", "repo", "add", "elastic",
-         "https://helm.elastic.co")
-    exec("helm", "repo", "update")
-
     kubeconfig_file_path, kubeconfig_file_cleanup = download_kubeconfig(
         aks_cluster_id=output['aks_cluster_id']['value'],
     )
 
-    exec(
-        "helm", "upgrade", "ingress-nginx", "ingress-nginx/ingress-nginx",
-        "--version", "4.11.3",
-        "--namespace", "ingress-nginx",
-        "--create-namespace",
-        "--install",
-        "--wait",
-        "--kubeconfig", kubeconfig_file_path,
-        "--values", os.path.join(
-            os.getcwd(), "config", "ingress-nginx", "values.yml"),
-    )
+    helm_client = HelmClient(kubeconfig=kubeconfig_file_path)
 
-    eck_values_file_path = os.path.join(
+    print("deploying ingress-nginx")
+    nginx_chart = await helm_client.get_chart(
+        "ingress-nginx",
+        repo="https://kubernetes.github.io/ingress-nginx",
+        version="4.11.3"
+    )
+    nginx_values_file_path = os.path.join(
+        os.getcwd(), "config", "ingress-nginx", "values.yml")
+    nginx_values = yaml.safe_load(Path(nginx_values_file_path).read_text())
+    nginx_revision = await helm_client.install_or_upgrade_release(
+        "ingress-nginx",
+        nginx_chart,
+        nginx_values,
+        namespace="ingress-nginx",
+        create_namespace=True,
+        wait=True,
+    )
+    print(f"release {nginx_revision.release.name} with revision {nginx_revision.revision} has status {nginx_revision.status}")
+
+    print("deploying eck-operator")
+    eck_operator_chart = await helm_client.get_chart(
+        "eck-operator",
+        repo="https://helm.elastic.co",
+        version="2.16.1"
+    )
+    eck_operator_values_file_path = os.path.join(
         os.getcwd(), "config", "eck-operator", "values.yml")
-
-    # eck_values = None
-    # with open(eck_values_file_path, "r") as file:
-    #     eck_values = yaml.safe_load(file)
-
-    # temp_dir = TemporaryDirectory()
-
-    # for n in eck_values["managedNamespaces"]:
-    #     manifest_file_path = os.path.join(temp_dir.name, f"{n}.yaml")
-    #     create_ns_cmd = exec(
-    #         "kubectl", "create", "namespace",
-    #         n,
-    #         "--dry-run=client",
-    #         "--output", "yaml",
-    #     )
-    #     with open(manifest_file_path, "w") as manifest_file:
-    #         manifest_file.write(create_ns_cmd.stdout)
-    #         manifest_file.close()
-    #     exec(
-    #         "kubectl", "apply",
-    #         "-f",
-    #         manifest_file_path,
-    #         "--wait",
-    #         "--kubeconfig", kubeconfig_file_path,
-    #     )
-
-    # temp_dir.cleanup()
-
-    exec(
-        "helm", "upgrade", "eck-operator", "elastic/eck-operator",
-        "--version", "2.16.1",
-        # "--namespace", "tenant-external-search",
-        # "--create-namespace",
-        "--install",
-        "--wait",
-        "--kubeconfig", kubeconfig_file_path,
-        "--values", eck_values_file_path,
+    eck_operator_values = yaml.safe_load(
+        Path(eck_operator_values_file_path).read_text())
+    eck_operator_revision = await helm_client.install_or_upgrade_release(
+        "eck-operator",
+        eck_operator_chart,
+        eck_operator_values,
+        namespace="elastic-system",
+        create_namespace=True,
+        wait=True,
     )
+    print(f"release {eck_operator_revision.release.name} with revision {eck_operator_revision.revision} has status {eck_operator_revision.status}")
 
     ingress_external_ip = get_ingress_external_ip(kubeconfig_file_path)
     ingress_fqdn = f"{ingress_external_ip.replace('.', '-')}.nip.io"
 
-    values = {
+    print("deploying eck-demo")
+    eck_demo_chart = await helm_client.get_chart(
+        chart_ref=os.path.join(os.getcwd(), "src", "helm"),
+    )
+    eck_demo_values = {
         "external_hostname_suffix": ingress_fqdn,
     }
-
-    temp_dir = TemporaryDirectory()
-
-    values_file_path = os.path.join(temp_dir.name, "values.yml")
-
-    with open(values_file_path, "w") as values_file:
-        yaml.dump(values, values_file)
-        values_file.close()
-
-    exec(
-        "helm", "upgrade", "eck-demo", os.path.join(
-            os.getcwd(), "src", "helm"),
-        "--namespace", "elastic",
-        "--create-namespace",
-        "--install",
-        "--wait",
-        "--values", values_file_path,
-        "--kubeconfig", kubeconfig_file_path,
+    eck_demo_revision = await helm_client.install_or_upgrade_release(
+        "eck-demo",
+        eck_demo_chart,
+        eck_demo_values,
+        namespace="elastic",
+        create_namespace=True,
+        wait=True,
     )
-
-    temp_dir.cleanup()
+    print(f"release {eck_demo_revision.release.name} with revision {eck_demo_revision.revision} has status {eck_demo_revision.status}")
 
     kubeconfig_file_cleanup()
 
@@ -124,4 +99,4 @@ def deploy():
 
 
 if __name__ == "__main__":
-    deploy()
+    asyncio.run(deploy())
