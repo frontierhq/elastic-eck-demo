@@ -1,0 +1,4 @@
+---
+apiVersion: v2
+name: eck-demo
+version: 1.0.0

@@ -1,0 +1,12 @@
+---
+extends: default
+
+ignore:
+  - .terraform/
+  - .venv/
+  - src/helm/templates/*
+
+rules:
+  line-length: false
+  braces:
+    max-spaces-inside: 1

@@ -1,0 +1,8 @@
+---
+# config:
+#   validateStorageClass: false
+# createClusterScopedResources: false
+# managedNamespaces:
+#   - elastic
+# webhook:
+#   enabled: false
