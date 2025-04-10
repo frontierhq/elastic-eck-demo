@@ -1,0 +1,145 @@
+---
+eck-elasticsearch:
+  fullnameOverride: prd
+  version: 8.17.4
+  monitoring:
+    metrics:
+      elasticsearchRefs:
+        - name: monitoring
+    logs:
+      elasticsearchRefs:
+        - name: monitoring
+  http:
+    service:
+      spec:
+        type: LoadBalancer
+  nodeSets:
+    - name: master
+      count: 1
+      config:
+        node.roles:
+          - master
+      podTemplate:
+        metadata:
+          labels: &labels
+            azure.workload.identity/use: "true"
+        spec:
+          serviceAccountName: &serviceAccountName workload-identity
+          secureSettings: &secureSettings
+            - secretName: keystore
+          initContainers: &initContainers
+            - name: sysctl
+              securityContext:
+                privileged: true
+                runAsUser: 0
+              command: ["sh", "-c", "sysctl -w vm.max_map_count=262144"]
+          containers:
+            - name: elasticsearch
+              resources:
+                requests:
+                  cpu: 1
+                  memory: 2Gi
+                limits:
+                  memory: 2Gi
+      volumeClaimTemplates:
+        - metadata:
+            name: elasticsearch-data
+          spec:
+            accessModes:
+              - ReadWriteOnce
+            resources:
+              requests:
+                storage: 5Gi
+            storageClassName: managed-csi-premium
+    - name: hot
+      count: 1
+      config:
+        node.roles:
+          - data_hot
+          - data_content
+          - ingest
+      podTemplate:
+        metadata:
+          labels: *labels
+        spec:
+          serviceAccountName: *serviceAccountName
+          secureSettings: *secureSettings
+          initContainers: *initContainers
+          containers:
+            - name: elasticsearch
+              resources: &dataResources
+                requests:
+                  cpu: 2
+                  memory: 4Gi
+                limits:
+                  memory: 4Gi
+      volumeClaimTemplates: &dataVolumeClaimTemplates
+        - metadata:
+            name: elasticsearch-data
+          spec:
+            accessModes:
+              - ReadWriteOnce
+            resources:
+              requests:
+                storage: 30Gi
+            storageClassName: managed-csi-premium
+    - name: cold
+      count: 1
+      config:
+        node.roles:
+          - data_cold
+      podTemplate:
+        metadata:
+          labels: *labels
+        spec:
+          serviceAccountName: *serviceAccountName
+          secureSettings: *secureSettings
+          initContainers: *initContainers
+          containers:
+            - name: elasticsearch
+              resources: *dataResources
+      volumeClaimTemplates: *dataVolumeClaimTemplates
+    - name: frozen
+      count: 1
+      config:
+        node.roles:
+          - data_frozen
+      podTemplate:
+        metadata:
+          labels: *labels
+        spec:
+          serviceAccountName: *serviceAccountName
+          secureSettings: *secureSettings
+          initContainers: *initContainers
+          containers:
+            - name: elasticsearch
+              resources: *dataResources
+      volumeClaimTemplates: *dataVolumeClaimTemplates
+eck-kibana:
+  fullnameOverride: prd
+  version: 8.17.4
+  elasticsearchRef:
+    name: prd
+  count: 2
+  podTemplate:
+    spec:
+      containers:
+        - name: kibana
+          resources:
+            requests:
+              cpu: 1
+              memory: 1Gi
+            limits:
+              memory: 1Gi
+  config:
+    server.publicBaseUrl: https://prd.foo.com  # Replaced in the deploy script.
+  ingress:
+    enabled: true
+    className: nginx
+    annotations:
+      nginx.ingress.kubernetes.io/force-ssl-redirect: "true"
+      nginx.ingress.kubernetes.io/backend-protocol: "https"
+    pathType: Prefix
+    hosts:
+      - host: prd.foo.com  # Replaced in the deploy script.
+        paths: /

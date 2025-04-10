@@ -1,4 +1,4 @@
 ---
 apiVersion: v2
-name: eck-demo
+name: eck-stack-config
 version: 1.0.0

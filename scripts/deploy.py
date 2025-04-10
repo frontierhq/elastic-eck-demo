@@ -76,26 +76,55 @@ async def deploy():
     ingress_external_ip = get_ingress_external_ip(kubeconfig_file_path)
     ingress_fqdn = f"{ingress_external_ip.replace('.', '-')}.nip.io"
 
-    print("deploying eck-demo")
-    eck_demo_chart = await helm_client.get_chart(
+    print("deploying eck-stack-config")
+    eck_stack_config_chart = await helm_client.get_chart(
         chart_ref=os.path.join(os.getcwd(), "src", "helm"),
     )
-    eck_demo_values = {
-        "external_hostname_suffix": ingress_fqdn,
+    eck_stack_config_values = {
+        "azure_repository": {
+            "account": output['storage_account_name']['value'],
+        },
+        "managed_identity": {
+            "client_id": output['managed_identity_client_id']['value'],
+        },
     }
-    eck_demo_revision = await helm_client.install_or_upgrade_release(
-        "eck-demo",
-        eck_demo_chart,
-        eck_demo_values,
+    eck_stack_config_revision = await helm_client.install_or_upgrade_release(
+        "eck-stack-config",
+        eck_stack_config_chart,
+        eck_stack_config_values,
         namespace="elastic",
         create_namespace=True,
         wait=True,
     )
-    print(f"release {eck_demo_revision.release.name} with revision {eck_demo_revision.revision} has status {eck_demo_revision.status}")
+    print(f"release {eck_stack_config_revision.release.name} with revision {eck_stack_config_revision.revision} has status {eck_stack_config_revision.status}")
+
+    eck_stack_names = ["monitoring", "prd"]
+    for eck_stack_name in eck_stack_names:
+        print(f"deploying eck-stack {eck_stack_name}")
+        eck_stack_chart = await helm_client.get_chart(
+            "eck-stack",
+            repo="https://helm.elastic.co",
+            version="0.14.1"
+        )
+        eck_stack_values_file_path = os.path.join(
+            os.getcwd(), "config", "eck-stack", f"values.{eck_stack_name}.yml")
+        eck_stack_values = yaml.safe_load(
+            Path(eck_stack_values_file_path).read_text())
+        eck_stack_values["eck-kibana"]["config"]["server.publicBaseUrl"] = f"https://{eck_stack_name}.{ingress_fqdn}"
+        eck_stack_values["eck-kibana"]["ingress"]["hosts"][0]["host"] = f"{eck_stack_name}.{ingress_fqdn}"
+        eck_stack_revision = await helm_client.install_or_upgrade_release(
+            f"eck-stack-{eck_stack_name}",
+            eck_stack_chart,
+            eck_stack_values,
+            namespace="elastic",
+            create_namespace=True,
+            wait=True,
+        )
+        print(f"release {eck_stack_revision.release.name} with revision {eck_stack_revision.revision} has status {eck_stack_revision.status}")
+
+        print(f"Kibana available at: https://{eck_stack_name}.{ingress_fqdn}")
 
     kubeconfig_file_cleanup()
-
-    print(f"Monitoring available at: https://monitoring.{ingress_fqdn}")
 
 
 if __name__ == "__main__":

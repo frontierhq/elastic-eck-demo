@@ -1,10 +1,7 @@
 ---
-apiVersion: elasticsearch.k8s.elastic.co/v1
-kind: Elasticsearch
-metadata:
-  name: prd
-spec:
-  version: 8.16.1
+eck-elasticsearch:
+  fullnameOverride: monitoring
+  version: 8.17.4
   monitoring:
     metrics:
       elasticsearchRefs:
@@ -12,9 +9,13 @@ spec:
     logs:
       elasticsearchRefs:
         - name: monitoring
+  http:
+    service:
+      spec:
+        type: LoadBalancer
   nodeSets:
     - name: default
-      count: 3
+      count: 1
       podTemplate:
         spec:
           initContainers:
@@ -41,3 +42,31 @@ spec:
               requests:
                 storage: 30Gi
             storageClassName: managed-csi-premium
+eck-kibana:
+  fullnameOverride: monitoring
+  version: 8.17.4
+  elasticsearchRef:
+    name: monitoring
+  count: 1
+  podTemplate:
+    spec:
+      containers:
+        - name: kibana
+          resources:
+            requests:
+              cpu: 1
+              memory: 1Gi
+            limits:
+              memory: 1Gi
+  config:
+    server.publicBaseUrl: https://monitoring.foo.com  # Replaced in the deploy script.
+  ingress:
+    enabled: true
+    className: nginx
+    annotations:
+      nginx.ingress.kubernetes.io/force-ssl-redirect: "true"
+      nginx.ingress.kubernetes.io/backend-protocol: "https"
+    pathType: Prefix
+    hosts:
+      - host: monitoring.foo.com  # Replaced in the deploy script.
+        paths: /
