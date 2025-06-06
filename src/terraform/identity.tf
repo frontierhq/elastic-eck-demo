@@ -16,5 +16,5 @@ resource "azurerm_federated_identity_credential" "main" {
   audience            = ["api://AzureADTokenExchange"]
   issuer              = module.kubernetes_cluster.oidc_issuer_url
   parent_id           = module.user_assigned_identity.id
-  subject             = "system:serviceaccount:elastic:workload-identity"
+  subject             = "system:serviceaccount:elastic:elasticsearch"
 }

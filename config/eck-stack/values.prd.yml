@@ -13,6 +13,8 @@ eck-elasticsearch:
     service:
       spec:
         type: LoadBalancer
+  secureSettings:
+    - secretName: keystore
   nodeSets:
     - name: master
       count: 1
@@ -24,9 +26,7 @@ eck-elasticsearch:
           labels: &labels
             azure.workload.identity/use: "true"
         spec:
-          serviceAccountName: &serviceAccountName workload-identity
-          secureSettings: &secureSettings
-            - secretName: keystore
+          serviceAccountName: &serviceAccountName elasticsearch
           initContainers: &initContainers
             - name: sysctl
               securityContext:
@@ -41,6 +41,12 @@ eck-elasticsearch:
                   memory: 2Gi
                 limits:
                   memory: 2Gi
+              env: &env
+                - name: AZURE_FEDERATED_TOKEN_FILE
+                  value: /usr/share/elasticsearch/config/azure/tokens/azure-identity-token
+              volumeMounts: &volumeMounts
+                - name: azure-identity-token
+                  mountPath: /usr/share/elasticsearch/config/azure/tokens
       volumeClaimTemplates:
         - metadata:
             name: elasticsearch-data
@@ -63,7 +69,6 @@ eck-elasticsearch:
           labels: *labels
         spec:
           serviceAccountName: *serviceAccountName
-          secureSettings: *secureSettings
           initContainers: *initContainers
           containers:
             - name: elasticsearch
@@ -73,6 +78,8 @@ eck-elasticsearch:
                   memory: 4Gi
                 limits:
                   memory: 4Gi
+              env: *env
+              volumeMounts: *volumeMounts
       volumeClaimTemplates: &dataVolumeClaimTemplates
         - metadata:
             name: elasticsearch-data
@@ -93,11 +100,12 @@ eck-elasticsearch:
           labels: *labels
         spec:
           serviceAccountName: *serviceAccountName
-          secureSettings: *secureSettings
           initContainers: *initContainers
           containers:
             - name: elasticsearch
               resources: *dataResources
+              env: *env
+              volumeMounts: *volumeMounts
       volumeClaimTemplates: *dataVolumeClaimTemplates
     - name: frozen
       count: 1
@@ -109,11 +117,12 @@ eck-elasticsearch:
           labels: *labels
         spec:
           serviceAccountName: *serviceAccountName
-          secureSettings: *secureSettings
           initContainers: *initContainers
           containers:
             - name: elasticsearch
               resources: *dataResources
+              env: *env
+              volumeMounts: *volumeMounts
       volumeClaimTemplates: *dataVolumeClaimTemplates
 eck-kibana:
   fullnameOverride: prd
