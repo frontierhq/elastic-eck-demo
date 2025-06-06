@@ -141,7 +141,7 @@ eck-kibana:
             limits:
               memory: 1Gi
   config:
-    server.publicBaseUrl: https://prd.foo.com # Replaced in the deploy script.
+    server.publicBaseUrl: https://prd.foo.com  # Replaced in the deploy script.
   ingress:
     enabled: true
     className: nginx
@@ -150,5 +150,5 @@ eck-kibana:
       nginx.ingress.kubernetes.io/backend-protocol: "https"
     pathType: Prefix
     hosts:
-      - host: prd.foo.com # Replaced in the deploy script.
+      - host: prd.foo.com  # Replaced in the deploy script.
         paths: /

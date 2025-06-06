@@ -59,7 +59,7 @@ eck-kibana:
             limits:
               memory: 1Gi
   config:
-    server.publicBaseUrl: https://monitoring.foo.com # Replaced in the deploy script.
+    server.publicBaseUrl: https://monitoring.foo.com  # Replaced in the deploy script.
   ingress:
     enabled: true
     className: nginx
@@ -68,5 +68,5 @@ eck-kibana:
       nginx.ingress.kubernetes.io/backend-protocol: "https"
     pathType: Prefix
     hosts:
-      - host: monitoring.foo.com # Replaced in the deploy script.
+      - host: monitoring.foo.com  # Replaced in the deploy script.
         paths: /
