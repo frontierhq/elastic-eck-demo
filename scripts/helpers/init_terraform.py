@@ -6,10 +6,10 @@ def init_terraform(working_dir: str, workspace: str = None):
 
     print("initialising terraform")
     return_code, _, _ = terraform.init()
-    if (return_code != 0):
+    if return_code != 0:
         exit(return_code)
 
-    if (workspace is not None):
+    if workspace is not None:
         print(f"selecting workspace {workspace}")
         return_code, x, y = terraform.cmd(
             "workspace select",
@@ -18,7 +18,7 @@ def init_terraform(working_dir: str, workspace: str = None):
             no_color=IsFlagged,
             or_create=IsFlagged,
         )
-        if (return_code != 0):
+        if return_code != 0:
             exit(return_code)
 
     return terraform

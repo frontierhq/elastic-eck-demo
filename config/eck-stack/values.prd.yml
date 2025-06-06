@@ -1,7 +1,7 @@
 ---
 eck-elasticsearch:
   fullnameOverride: prd
-  version: 8.17.4
+  version: 8.18.2
   monitoring:
     metrics:
       elasticsearchRefs:
@@ -117,10 +117,10 @@ eck-elasticsearch:
       volumeClaimTemplates: *dataVolumeClaimTemplates
 eck-kibana:
   fullnameOverride: prd
-  version: 8.17.4
+  version: 8.18.2
   elasticsearchRef:
     name: prd
-  count: 2
+  count: 1
   podTemplate:
     spec:
       containers:
@@ -132,7 +132,7 @@ eck-kibana:
             limits:
               memory: 1Gi
   config:
-    server.publicBaseUrl: https://prd.foo.com  # Replaced in the deploy script.
+    server.publicBaseUrl: https://prd.foo.com # Replaced in the deploy script.
   ingress:
     enabled: true
     className: nginx
@@ -141,5 +141,5 @@ eck-kibana:
       nginx.ingress.kubernetes.io/backend-protocol: "https"
     pathType: Prefix
     hosts:
-      - host: prd.foo.com  # Replaced in the deploy script.
+      - host: prd.foo.com # Replaced in the deploy script.
         paths: /

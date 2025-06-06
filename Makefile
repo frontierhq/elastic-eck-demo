@@ -1,30 +1,34 @@
+.DEFAULT_GOAL := install
+
 build:
 
 clean:
 	find . -type d -name ".terraform" -exec rm -rf "{}" \+
 
 deploy:
-	pipenv run python scripts/deploy.py
+	uv run python scripts/deploy.py
 
 destroy:
-	pipenv run python scripts/destroy.py
+	uv run python scripts/destroy.py
 
 install:
-	pipenv install --dev
-	pipenv run pre-commit install
-
-install_ci:
-	pipenv sync
+ifeq ($(CI),true)
+	uv sync --frozen
+else
+	uv sync
+	uv run pre-commit install
+endif
 
 test: test.lint test.script
 
 test.lint: test.lint.python test.lint.yaml
 
 test.lint.python:
-	pipenv run flake8 scripts
+	uv run ruff check scripts
+	uv run ruff format --check --diff scripts
 
 test.lint.yaml:
-	pipenv run yamllint .
+	uv run yamllint .
 
 test.script:
-	pipenv run python scripts/test.py
+	uv run python scripts/test.py

@@ -4,9 +4,9 @@ from tempfile import TemporaryDirectory
 
 
 def destroy_terraform(
-        terraform: Terraform,
-        plan_only: bool = False,
-        **kwargs: dict,
+    terraform: Terraform,
+    plan_only: bool = False,
+    **kwargs: dict,
 ) -> dict:
     temp_dir = TemporaryDirectory()
     terraform_plan_file_path = os.path.join(temp_dir.name, "main.tfplan")
@@ -16,7 +16,7 @@ def destroy_terraform(
         capture_output=False,
         **kwargs,
     )
-    if (return_code != 0 and return_code != 2):
+    if return_code != 0 and return_code != 2:
         exit(return_code)
 
     if not plan_only:
@@ -25,7 +25,7 @@ def destroy_terraform(
             var=None,
             capture_output=False,
         )
-        if (return_code != 0):
+        if return_code != 0:
             exit(return_code)
 
     temp_dir.cleanup()
