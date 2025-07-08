@@ -9,13 +9,15 @@ module "kubernetes_cluster" {
 
   kubernetes_version         = local.kubernetes_version
   log_analytics_workspace_id = data.azurerm_log_analytics_workspace.main.id
-  network_plugin_mode        = null
   node_max_count             = local.node_max_count
   node_min_count             = local.node_min_count
   oidc_issuer_enabled        = true
   vm_size                    = local.vm_size
   vnet_subnet_id             = azurerm_subnet.node.id
   workload_identity_enabled  = true
+
+  # network_plugin_mode        = null # Uncomment to use flat network mode, rather than overlay
+  # pod_subnet_id              = azurerm_subnet.pod.id # Uncomment to use flat network mode, rather than overlay
 
   tags = merge(var.tags, local.tags)
 }

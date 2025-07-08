@@ -21,19 +21,20 @@ resource "azurerm_subnet" "node" {
   address_prefixes = [cidrsubnet(local.virtual_network_address_space, 1, 0)]
 }
 
-resource "azurerm_subnet" "pod" {
-  name                 = "pod"
-  virtual_network_name = module.virtual_network.name
-  resource_group_name  = module.resource_group.name
+# Uncomment to use flat network mode, rather than overlay
+# resource "azurerm_subnet" "pod" {
+#   name                 = "pod"
+#   virtual_network_name = module.virtual_network.name
+#   resource_group_name  = module.resource_group.name
 
-  address_prefixes = [cidrsubnet(local.virtual_network_address_space, 1, 1)]
+#   address_prefixes = [cidrsubnet(local.virtual_network_address_space, 1, 1)]
 
-  delegation {
-    name = "aks-delegation"
+#   delegation {
+#     name = "aks-delegation"
 
-    service_delegation {
-      name    = "Microsoft.ContainerService/managedClusters"
-      actions = ["Microsoft.Network/virtualNetworks/subnets/join/action"]
-    }
-  }
-}
+#     service_delegation {
+#       name    = "Microsoft.ContainerService/managedClusters"
+#       actions = ["Microsoft.Network/virtualNetworks/subnets/join/action"]
+#     }
+#   }
+# }
