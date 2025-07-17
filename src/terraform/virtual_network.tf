@@ -1,5 +1,5 @@
 module "virtual_network" {
-  source = "https://github.com/frontierhq/azurerm-terraform-modules/releases/download/virtual-network/2.0.2/module.tar.gz//src"
+  source = "https://github.com/frontierhq/azurerm-terraform-modules/releases/download/virtual-network/3.0.0/module.tar.gz//src"
 
   environment         = var.environment
   identifier          = local.identifier
@@ -13,10 +13,28 @@ module "virtual_network" {
   tags = merge(var.tags, local.tags)
 }
 
-resource "azurerm_subnet" "main" {
-  name                 = "${local.identifier}-k8s"
+resource "azurerm_subnet" "node" {
+  name                 = "node"
   virtual_network_name = module.virtual_network.name
   resource_group_name  = module.resource_group.name
 
-  address_prefixes = [cidrsubnet(local.virtual_network_address_space, 3, 0)]
+  address_prefixes = [cidrsubnet(local.virtual_network_address_space, 1, 0)]
 }
+
+# Uncomment to use flat network mode, rather than overlay
+# resource "azurerm_subnet" "pod" {
+#   name                 = "pod"
+#   virtual_network_name = module.virtual_network.name
+#   resource_group_name  = module.resource_group.name
+
+#   address_prefixes = [cidrsubnet(local.virtual_network_address_space, 1, 1)]
+
+#   delegation {
+#     name = "aks-delegation"
+
+#     service_delegation {
+#       name    = "Microsoft.ContainerService/managedClusters"
+#       actions = ["Microsoft.Network/virtualNetworks/subnets/join/action"]
+#     }
+#   }
+# }

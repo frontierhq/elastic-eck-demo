@@ -1,0 +1,21 @@
+[project]
+name = "elastic-eck-demo"
+version = "0.1.0"
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = [
+    "azure-identity>=1.14.1",
+    "azure-mgmt-containerservice>=27.0.0",
+    "dotenv>=0.9.9",
+    "esrally>=2.11.1",
+    "pyhelm3>=0.4.0",
+    "python-terraform>=0.10.1",
+    "pyyaml>=6.0.1",
+]
+
+[dependency-groups]
+dev = [
+    "pre-commit>=4.1.0",
+    "ruff>=0.9.7",
+    "yamllint>=1.35.1",
+]

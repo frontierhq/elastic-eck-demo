@@ -1,0 +1,154 @@
+---
+eck-elasticsearch:
+  fullnameOverride: prd
+  version: 8.18.2
+  monitoring:
+    metrics:
+      elasticsearchRefs:
+        - name: monitoring
+    logs:
+      elasticsearchRefs:
+        - name: monitoring
+  http:
+    service:
+      spec:
+        type: LoadBalancer
+  secureSettings:
+    - secretName: keystore
+  nodeSets:
+    - name: master
+      count: 1
+      config:
+        node.roles:
+          - master
+      podTemplate:
+        metadata:
+          labels: &labels
+            azure.workload.identity/use: "true"
+        spec:
+          serviceAccountName: &serviceAccountName elasticsearch
+          initContainers: &initContainers
+            - name: sysctl
+              securityContext:
+                privileged: true
+                runAsUser: 0
+              command: ["sh", "-c", "sysctl -w vm.max_map_count=262144"]
+          containers:
+            - name: elasticsearch
+              resources:
+                requests:
+                  cpu: 1
+                  memory: 2Gi
+                limits:
+                  memory: 2Gi
+              env: &env
+                - name: AZURE_FEDERATED_TOKEN_FILE
+                  value: /usr/share/elasticsearch/config/azure/tokens/azure-identity-token
+              volumeMounts: &volumeMounts
+                - name: azure-identity-token
+                  mountPath: /usr/share/elasticsearch/config/azure/tokens
+      volumeClaimTemplates:
+        - metadata:
+            name: elasticsearch-data
+          spec:
+            accessModes:
+              - ReadWriteOnce
+            resources:
+              requests:
+                storage: 5Gi
+            storageClassName: managed-csi-premium
+    - name: hot
+      count: 1
+      config:
+        node.roles:
+          - data_hot
+          - data_content
+          - ingest
+      podTemplate:
+        metadata:
+          labels: *labels
+        spec:
+          serviceAccountName: *serviceAccountName
+          initContainers: *initContainers
+          containers:
+            - name: elasticsearch
+              resources: &dataResources
+                requests:
+                  cpu: 2
+                  memory: 4Gi
+                limits:
+                  memory: 4Gi
+              env: *env
+              volumeMounts: *volumeMounts
+      volumeClaimTemplates: &dataVolumeClaimTemplates
+        - metadata:
+            name: elasticsearch-data
+          spec:
+            accessModes:
+              - ReadWriteOnce
+            resources:
+              requests:
+                storage: 30Gi
+            storageClassName: managed-csi-premium
+    - name: cold
+      count: 1
+      config:
+        node.roles:
+          - data_cold
+      podTemplate:
+        metadata:
+          labels: *labels
+        spec:
+          serviceAccountName: *serviceAccountName
+          initContainers: *initContainers
+          containers:
+            - name: elasticsearch
+              resources: *dataResources
+              env: *env
+              volumeMounts: *volumeMounts
+      volumeClaimTemplates: *dataVolumeClaimTemplates
+    - name: frozen
+      count: 1
+      config:
+        node.roles:
+          - data_frozen
+      podTemplate:
+        metadata:
+          labels: *labels
+        spec:
+          serviceAccountName: *serviceAccountName
+          initContainers: *initContainers
+          containers:
+            - name: elasticsearch
+              resources: *dataResources
+              env: *env
+              volumeMounts: *volumeMounts
+      volumeClaimTemplates: *dataVolumeClaimTemplates
+eck-kibana:
+  fullnameOverride: prd
+  version: 8.18.2
+  elasticsearchRef:
+    name: prd
+  count: 1
+  podTemplate:
+    spec:
+      containers:
+        - name: kibana
+          resources:
+            requests:
+              cpu: 1
+              memory: 1Gi
+            limits:
+              memory: 1Gi
+  config:
+    server.publicBaseUrl: https://prd.foo.com  # Replaced in the deploy script.
+  ingress:
+    enabled: true
+    className: nginx
+    annotations:
+      nginx.ingress.kubernetes.io/force-ssl-redirect: "true"
+      nginx.ingress.kubernetes.io/backend-protocol: "https"
+    pathType: Prefix
+    hosts:
+      - host: prd.foo.com  # Replaced in the deploy script.
+        paths: /

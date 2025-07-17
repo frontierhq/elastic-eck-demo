@@ -14,8 +14,9 @@ def download_kubeconfig(aks_cluster_id: str):
     aks_cluster_resource_group_name = aks_cluster_id_parts[4]
     aks_cluster_name = aks_cluster_id_parts[8]
 
-    client = ContainerServiceClient(credential=DefaultAzureCredential(
-    ), subscription_id=aks_cluster_subscription_id)
+    client = ContainerServiceClient(
+        credential=DefaultAzureCredential(), subscription_id=aks_cluster_subscription_id
+    )
     cluster_admin_credentials = client.managed_clusters.list_cluster_admin_credentials(
         resource_group_name=aks_cluster_resource_group_name,
         resource_name=aks_cluster_name,

@@ -10,16 +10,16 @@ def test_terraform(working_dir: str, validate: bool = True):
         diff=True,
         capture_output=False,
     )
-    if (return_code != 0):
+    if return_code != 0:
         exit(return_code)
 
-    if (validate):
+    if validate:
         return_code, _, _ = terraform.init(backend=False, capture_output=False)
-        if (return_code != 0):
+        if return_code != 0:
             exit(return_code)
 
         return_code, _, _ = terraform.validate(capture_output=False)
-        if (return_code != 0):
+        if return_code != 0:
             exit(return_code)
 
 

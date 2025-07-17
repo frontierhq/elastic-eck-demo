@@ -1,7 +1,7 @@
 import subprocess
 
 
-def exec(*args: [], silent: bool = False, **kwargs):
+def exec(*args: list[str], silent: bool = False, **kwargs):
     process = subprocess.run(
         args=args,
         stdout=subprocess.PIPE,
