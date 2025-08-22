@@ -1,6 +1,6 @@
 ---
 eck-elasticsearch:
-  fullnameOverride: prd
+  fullnameOverride: a
   version: 8.18.2
   monitoring:
     metrics:
@@ -21,6 +21,7 @@ eck-elasticsearch:
       config:
         node.roles:
           - master
+          - remote_cluster_client
       podTemplate:
         metadata:
           labels: &labels
@@ -64,6 +65,7 @@ eck-elasticsearch:
           - data_hot
           - data_content
           - ingest
+          - remote_cluster_client
       podTemplate:
         metadata:
           labels: *labels
@@ -74,10 +76,10 @@ eck-elasticsearch:
             - name: elasticsearch
               resources: &dataResources
                 requests:
-                  cpu: 2
-                  memory: 4Gi
+                  cpu: 1
+                  memory: 2Gi
                 limits:
-                  memory: 4Gi
+                  memory: 2Gi
               env: *env
               volumeMounts: *volumeMounts
       volumeClaimTemplates: &dataVolumeClaimTemplates
@@ -95,6 +97,7 @@ eck-elasticsearch:
       config:
         node.roles:
           - data_cold
+          - remote_cluster_client
       podTemplate:
         metadata:
           labels: *labels
@@ -112,6 +115,7 @@ eck-elasticsearch:
       config:
         node.roles:
           - data_frozen
+          - remote_cluster_client
       podTemplate:
         metadata:
           labels: *labels
@@ -124,11 +128,21 @@ eck-elasticsearch:
               env: *env
               volumeMounts: *volumeMounts
       volumeClaimTemplates: *dataVolumeClaimTemplates
+  transport:
+    service:
+      metadata:
+        annotations:
+          service.beta.kubernetes.io/azure-load-balancer-internal: "true"
+      spec:
+        type: LoadBalancer
+    tls:
+      certificateAuthorities:
+        configMapName: remote-certs
 eck-kibana:
-  fullnameOverride: prd
+  fullnameOverride: a
   version: 8.18.2
   elasticsearchRef:
-    name: prd
+    name: a
   count: 1
   podTemplate:
     spec:
@@ -141,7 +155,7 @@ eck-kibana:
             limits:
               memory: 1Gi
   config:
-    server.publicBaseUrl: https://prd.foo.com  # Replaced in the deploy script.
+    server.publicBaseUrl: https://a.foo.com # Replaced in the deploy script.
   ingress:
     enabled: true
     className: nginx
@@ -150,5 +164,5 @@ eck-kibana:
       nginx.ingress.kubernetes.io/backend-protocol: "https"
     pathType: Prefix
     hosts:
-      - host: prd.foo.com  # Replaced in the deploy script.
+      - host: a.foo.com # Replaced in the deploy script.
         paths: /

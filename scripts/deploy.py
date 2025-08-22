@@ -61,7 +61,7 @@ async def deploy():
 
     print("deploying eck-operator")
     eck_operator_chart = await helm_client.get_chart(
-        "eck-operator", repo="https://helm.elastic.co", version="3.0.0"
+        "eck-operator", repo="https://helm.elastic.co", version="3.1.0"
     )
     eck_operator_values_file_path = os.path.join(
         os.getcwd(), "config", "eck-operator", "values.yml"
@@ -108,7 +108,7 @@ async def deploy():
         f"release {eck_stack_config_revision.release.name} with revision {eck_stack_config_revision.revision} has status {eck_stack_config_revision.status}"
     )
 
-    eck_stack_names = ["monitoring", "prd"]
+    eck_stack_names = ["monitoring", "a", "b"]
     for eck_stack_name in eck_stack_names:
         print(f"deploying eck-stack {eck_stack_name}")
         eck_stack_chart = await helm_client.get_chart(
