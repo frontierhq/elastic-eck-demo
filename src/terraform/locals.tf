@@ -1,6 +1,6 @@
 locals {
   identifier                    = "eckdemo"
-  kubernetes_version            = "1.30.5"
+  kubernetes_version            = "1.33.2"
   node_max_count                = 9
   node_min_count                = 3
   tags                          = {}
