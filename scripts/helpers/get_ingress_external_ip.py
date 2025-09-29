@@ -1,4 +1,4 @@
-from helpers.exec import exec
+from py_utils import exec
 
 
 def get_ingress_external_ip(kubeconfig_file_path: str):
