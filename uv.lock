@@ -383,7 +383,6 @@ dependencies = [
     { name = "esrally" },
     { name = "py-utils" },
     { name = "pyhelm3" },
-    { name = "python-terraform" },
     { name = "pyyaml" },
 ]
 
@@ -402,7 +401,6 @@ requires-dist = [
     { name = "esrally", specifier = ">=2.11.1" },
     { name = "py-utils", git = "https://github.com/frontierhq/py-utils.git?rev=0.2.1" },
     { name = "pyhelm3", specifier = ">=0.4.0" },
-    { name = "python-terraform", specifier = ">=0.10.1" },
     { name = "pyyaml", specifier = ">=6.0.1" },
 ]
 
