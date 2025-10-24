@@ -15,7 +15,7 @@ dependencies = [
 ]
 
 [tool.uv.sources]
-py-utils = { path = "../py-utils", editable = true }
+py-utils = { git = "https://github.com/frontierhq/py-utils.git", rev = "0.2.1" }
 
 [dependency-groups]
 dev = [

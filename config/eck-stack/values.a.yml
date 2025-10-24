@@ -2,6 +2,9 @@
 eck-elasticsearch:
   fullnameOverride: a
   version: 8.18.2
+  auth:
+    fileRealm:
+      - secretName: filerealm-users
   monitoring:
     metrics:
       elasticsearchRefs:

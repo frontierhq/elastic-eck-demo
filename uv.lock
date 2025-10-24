@@ -400,7 +400,7 @@ requires-dist = [
     { name = "azure-mgmt-containerservice", specifier = ">=27.0.0" },
     { name = "dotenv", specifier = ">=0.9.9" },
     { name = "esrally", specifier = ">=2.11.1" },
-    { name = "py-utils", editable = "../py-utils" },
+    { name = "py-utils", git = "https://github.com/frontierhq/py-utils.git?rev=0.2.1" },
     { name = "pyhelm3", specifier = ">=0.4.0" },
     { name = "python-terraform", specifier = ">=0.10.1" },
     { name = "pyyaml", specifier = ">=6.0.1" },
@@ -951,23 +951,10 @@ sdist = { url = "https://files.pythonhosted.org/packages/f6/f5/8e6e85ce2e9f6e050
 [[package]]
 name = "py-utils"
 version = "0.2.0"
-source = { editable = "../py-utils" }
+source = { git = "https://github.com/frontierhq/py-utils.git?rev=0.2.1#2a6ff9c720b56bf1ad80151b6969d7fc6d8b480c" }
 dependencies = [
     { name = "jinja2" },
     { name = "python-terraform" },
-]
-
-[package.metadata]
-requires-dist = [
-    { name = "jinja2", specifier = ">=3.1.5" },
-    { name = "python-terraform", specifier = ">=0.10.1,<0.11.0" },
-]
-
-[package.metadata.requires-dev]
-dev = [
-    { name = "pre-commit", specifier = ">=4.1.0" },
-    { name = "ruff", specifier = ">=0.9.7" },
-    { name = "yamllint", specifier = ">=1.35.1" },
 ]
 
 [[package]]
