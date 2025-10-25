@@ -1,8 +1,7 @@
 import os
 from dotenv import load_dotenv
-from helpers.destroy_terraform import destroy_terraform
 from helpers.get_env_value import get_env_value
-from helpers.init_terraform import init_terraform
+from py_utils import destroy_terraform, init_terraform
 
 
 def deploy():

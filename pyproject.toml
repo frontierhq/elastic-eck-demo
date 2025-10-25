@@ -8,10 +8,13 @@ dependencies = [
     "azure-mgmt-containerservice>=27.0.0",
     "dotenv>=0.9.9",
     "esrally>=2.11.1",
+    "py-utils",
     "pyhelm3>=0.4.0",
-    "python-terraform>=0.10.1",
     "pyyaml>=6.0.1",
 ]
+
+[tool.uv.sources]
+py-utils = { git = "https://github.com/frontierhq/py-utils.git", rev = "0.2.1" }
 
 [dependency-groups]
 dev = [

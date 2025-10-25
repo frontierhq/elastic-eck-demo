@@ -1,0 +1,12 @@
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: filerealm-users
+  namespace: {{ .Release.Namespace }}
+type: Opaque
+stringData:
+  users: |-
+    another:$2a$10$vQTsR7T0aqvZik5ke25Yf.2Qk50DKhVhPB58RVwcLyqd9krWrHvMu # notasecret
+  users_roles: |-
+    kibana_admin:another
