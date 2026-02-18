@@ -1,7 +1,7 @@
 ---
 eck-elasticsearch:
   fullnameOverride: b
-  version: 8.18.2
+  version: 9.2.5
   monitoring:
     metrics:
       elasticsearchRefs:
@@ -38,7 +38,7 @@ eck-elasticsearch:
             - name: elasticsearch
               resources:
                 requests:
-                  cpu: 1
+                  cpu: 500m
                   memory: 2Gi
                 limits:
                   memory: 2Gi
@@ -58,11 +58,13 @@ eck-elasticsearch:
               requests:
                 storage: 5Gi
             storageClassName: managed-csi-premium
-    - name: hot
+    - name: data
       count: 1
       config:
         node.roles:
           - data_hot
+          - data_cold
+          - data_frozen
           - data_content
           - ingest
           - remote_cluster_client
@@ -74,15 +76,15 @@ eck-elasticsearch:
           initContainers: *initContainers
           containers:
             - name: elasticsearch
-              resources: &dataResources
+              resources:
                 requests:
-                  cpu: 1
+                  cpu: 500m
                   memory: 2Gi
                 limits:
                   memory: 2Gi
               env: *env
               volumeMounts: *volumeMounts
-      volumeClaimTemplates: &dataVolumeClaimTemplates
+      volumeClaimTemplates:
         - metadata:
             name: elasticsearch-data
           spec:
@@ -92,42 +94,6 @@ eck-elasticsearch:
               requests:
                 storage: 30Gi
             storageClassName: managed-csi-premium
-    - name: cold
-      count: 1
-      config:
-        node.roles:
-          - data_cold
-          - remote_cluster_client
-      podTemplate:
-        metadata:
-          labels: *labels
-        spec:
-          serviceAccountName: *serviceAccountName
-          initContainers: *initContainers
-          containers:
-            - name: elasticsearch
-              resources: *dataResources
-              env: *env
-              volumeMounts: *volumeMounts
-      volumeClaimTemplates: *dataVolumeClaimTemplates
-    - name: frozen
-      count: 1
-      config:
-        node.roles:
-          - data_frozen
-          - remote_cluster_client
-      podTemplate:
-        metadata:
-          labels: *labels
-        spec:
-          serviceAccountName: *serviceAccountName
-          initContainers: *initContainers
-          containers:
-            - name: elasticsearch
-              resources: *dataResources
-              env: *env
-              volumeMounts: *volumeMounts
-      volumeClaimTemplates: *dataVolumeClaimTemplates
   transport:
     service:
       metadata:
@@ -140,9 +106,16 @@ eck-elasticsearch:
         configMapName: remote-certs
 eck-kibana:
   fullnameOverride: b
-  version: 8.18.2
+  version: 9.2.5
   elasticsearchRef:
     name: b
+  monitoring:
+    metrics:
+      elasticsearchRefs:
+        - name: monitoring
+    logs:
+      elasticsearchRefs:
+        - name: monitoring
   count: 1
   podTemplate:
     spec:
@@ -150,7 +123,7 @@ eck-kibana:
         - name: kibana
           resources:
             requests:
-              cpu: 1
+              cpu: 250m
               memory: 1Gi
             limits:
               memory: 1Gi
