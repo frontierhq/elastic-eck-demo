@@ -1,7 +1,7 @@
 ---
 eck-elasticsearch:
   fullnameOverride: monitoring
-  version: 8.18.2
+  version: 9.2.5
   monitoring:
     metrics:
       elasticsearchRefs:
@@ -28,7 +28,7 @@ eck-elasticsearch:
             - name: elasticsearch
               resources:
                 requests:
-                  cpu: 1
+                  cpu: 500m
                   memory: 2Gi
                 limits:
                   memory: 2Gi
@@ -44,9 +44,16 @@ eck-elasticsearch:
             storageClassName: managed-csi-premium
 eck-kibana:
   fullnameOverride: monitoring
-  version: 8.18.2
+  version: 9.2.5
   elasticsearchRef:
     name: monitoring
+  monitoring:
+    metrics:
+      elasticsearchRefs:
+        - name: monitoring
+    logs:
+      elasticsearchRefs:
+        - name: monitoring
   count: 1
   podTemplate:
     spec:
@@ -54,7 +61,7 @@ eck-kibana:
         - name: kibana
           resources:
             requests:
-              cpu: 1
+              cpu: 250m
               memory: 1Gi
             limits:
               memory: 1Gi

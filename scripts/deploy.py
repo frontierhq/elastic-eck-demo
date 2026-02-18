@@ -40,7 +40,7 @@ async def deploy():
     nginx_chart = await helm_client.get_chart(
         "ingress-nginx",
         repo="https://kubernetes.github.io/ingress-nginx",
-        version="4.11.3",
+        version="4.14.3",
     )
     nginx_values_file_path = os.path.join(
         os.getcwd(), "config", "ingress-nginx", "values.yml"
@@ -60,7 +60,7 @@ async def deploy():
 
     print("deploying eck-operator")
     eck_operator_chart = await helm_client.get_chart(
-        "eck-operator", repo="https://helm.elastic.co", version="3.1.0"
+        "eck-operator", repo="https://helm.elastic.co", version="3.2.0"
     )
     eck_operator_values_file_path = os.path.join(
         os.getcwd(), "config", "eck-operator", "values.yml"
@@ -111,7 +111,7 @@ async def deploy():
     for eck_stack_name in eck_stack_names:
         print(f"deploying eck-stack {eck_stack_name}")
         eck_stack_chart = await helm_client.get_chart(
-            "eck-stack", repo="https://helm.elastic.co", version="0.15.0"
+            "eck-stack", repo="https://helm.elastic.co", version="0.17.0"
         )
         eck_stack_values_file_path = os.path.join(
             os.getcwd(), "config", "eck-stack", f"values.{eck_stack_name}.yml"
